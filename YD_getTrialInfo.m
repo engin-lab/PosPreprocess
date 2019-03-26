@@ -39,7 +39,7 @@ for i = 1:file_num
         if aux(p1) == 0
             for j = start:p1
                 trials(j,1) = -1;
-                trials(j,2) = -1;
+                trials(j,2) = t_idx;
             end
         else
             trajectory = aux(p1);
@@ -50,9 +50,8 @@ for i = 1:file_num
                 trials(j,1) = trajectory;
                 trials(j,2) = t_idx;
             end
+            t_idx = t_idx + 1;
         end
-
-    t_idx = t_idx + 1;
     end
 
 filename_prefix = char(strrep(current_filename,'.mat','_Trials.mat'));
