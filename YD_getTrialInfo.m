@@ -4,6 +4,8 @@
 % Output: a matrix of size (n, 2). n is the length of posdata
 %         column one represents the track number 1-4 or -1.
 %         column two represents the trail number n, n >= 1.
+%         The result will be stored at trial_info, make sure you have this
+%         folder in your current directory.
 
 % read the position matrix %
 mat_filename_dir = uigetdir(pwd, 'Select a folder');
@@ -55,7 +57,7 @@ for i = 1:file_num
     end
 
 filename_prefix = char(strrep(current_filename,'.mat','_Trials.mat'));
-save(filename_prefix,'trials');
+save(char(strcat("trial_info/",filename_prefix)),'trials');
 end
 
 
