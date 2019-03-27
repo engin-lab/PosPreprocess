@@ -41,7 +41,7 @@ for i = 1:file_num
         if aux(p1) == 0
             for j = start:p1
                 trials(j,1) = -1;
-                trials(j,2) = t_idx;
+                trials(j,2) = -1;
             end
         else
             trajectory = aux(p1);
