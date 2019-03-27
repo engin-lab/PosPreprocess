@@ -14,9 +14,14 @@ file_num = numel(file);
 
 for i = 1:file_num
     current_filename = file(i).name;
-    file_dir = strcat(mat_filename_dir,"/",current_filename);
+    file_dir = strcat('/Volumes/YukiBackup/eeyd_a5GABA_Project/VideosAnalyzed/posDATA/data/projectedposdata/',current_filename);
     load(file_dir); 
     
+    % coordinate of center %
+    cx = 1116;
+    cy = 1136;
+    % radius of the circle %
+    r = 800;
 
     ave_pos = [sum(pos(:,[1 3]), 2) / 2, sum(pos(:,[2 4]), 2) / 2];
 
@@ -25,7 +30,7 @@ for i = 1:file_num
 
     aux = zeros(length(ave_pos), 1);
     for i = 1:length(ave_pos)
-        aux(i) = getTrackNumber(ave_pos(i,1), ave_pos(i,2));
+        aux(i) = getTrackNumber(ave_pos(i,1), ave_pos(i,2), cx, cy, r);
     end
 
     p1 = 1;
