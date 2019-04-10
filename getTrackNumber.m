@@ -3,15 +3,20 @@
 % input: position of the animal
 % output: the track number n that the animal is currently located, 1<=n<=4
 %         or 0, indicating the animal has returned home
-%         or -1, indicating the animal has not reached one the arms
+%         [updated] or -1, indicating the animal has not reached one of the arms,
+%         between home and center point
+%         [updated] or -2, indicating the animal has not reached one of the
+%         arms, bewteen center point and reward area
 
 function f = getTrackNumber(x,y)
 cx = 1116; % x-coordinate of center
 cy = 1136; % y-coordinate of center
-r = 800;   % radius of the circle at (cx, cy), used to decide if the animal 
+% we updated the value of r. passing through the door is considered as
+% reaching the reward well.
+r = 416;   % radius of the circle at (cx, cy), used to decide if the animal 
            % returns to one of the arms.
            
-if y >= 1776
+if y >= 1706 % home
     f = 0; 
     return;
 end
@@ -38,7 +43,7 @@ if y <= cy
             end
         end
     else
-        f = -1;
+        f = -2;
         return;
     end
 end
