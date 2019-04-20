@@ -101,7 +101,7 @@ function f = get_track_info(visualize, save)
 
         aborted_indices = [start_indices' end_indices'];
 
-        for i = 1:length(aborted_indices)
+        for i = 1:size(aborted_indices, 1)
             start_index = aborted_indices(i, 1);
             end_index = aborted_indices(i, 2);
             % assign the non-aborted trial with the track number of next trial
