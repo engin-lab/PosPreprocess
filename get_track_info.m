@@ -18,7 +18,7 @@ function f = get_track_info(visualize, save)
     % position
     avg_pos = [sum(pos(:,[1 3]), 2) / 2, sum(pos(:,[2 4]), 2) / 2];
 
-    % result, col1 is the track info, col2 is the number of trials%
+    % result, col1 is the track info, col2 is the number of trials
     trials = zeros(length(avg_pos), 2);
 
     % auxiliary array used to store track number
@@ -26,87 +26,98 @@ function f = get_track_info(visualize, save)
     for i = 1:length(avg_pos)
         aux(i) = getTrackNumber(avg_pos(i,1), avg_pos(i,2));
     end
-
-    pt = 1; % pointer points to the current position
-    counter = 1; % counter for number of trials
-    while pt < length(avg_pos)
-        start = pt;
-        isAborted = 0; % this value changes to 1 if the animal passes through the center point,
-                       % i.e. tracknumber == -2 
-        while pt < length(avg_pos) && aux(pt) ~= -1
-            pt = pt + 1;
-        end
-        while pt < length(avg_pos) && (aux(pt) == -1 || aux(pt) == -2)
-            if aux(pt) == -2
-                isAborted = 1;
-            end
-            pt = pt + 1;
-        end
-        if aux(pt) == 0 && isAborted
-            % aborted trial
-            for j = start:pt
-                trials(j,1) = -1;
-                trials(j,2) = -1;
-            end
-        elseif aux(pt) == 0 && ~isAborted
-            pt = pt + 1;
-        else
-            trajectory = aux(pt);
-            while pt < length(avg_pos) && aux(pt) ~= 0
-                pt = pt + 1;
-            end
-            for j = start:pt
-                trials(j,1) = trajectory;
-                trials(j,2) = counter;
-            end
-            counter = counter + 1;
-        end
-    end 
+        
+    % find start and end indices of each trial
+    % fisrt find segments separated when trial number == 0 (home)
+    home_indices = find(aux==0);
+    start_index = home_indices(1);
+    end_index = home_indices(end);
     
-    % change zeros in the end of trial to negative ones
-    index = 1;
-    while index <= length(aux) && trials(index, 1) ~= 0
-        index = index + 1;
+    rest_of_start_indices = home_indices(find(diff(home_indices)>1)+1);
+    rest_of_end_indices = home_indices(diff(home_indices)>1);
+    
+    rest_of_start_indices = rest_of_start_indices(:,1)';
+    rest_of_end_indices = rest_of_end_indices(:,1)';
+    
+    start_indices = [start_index rest_of_start_indices];
+    end_indices = [rest_of_end_indices end_index];
+    
+    % find the start and end indices of each trial
+    home_indices = [start_indices' end_indices'];
+    start_indices = floor(mean(home_indices, 2));
+    end_indices = start_indices - 1;
+    start_indices = [1; start_indices];
+    end_indices = [end_indices; length(aux)];
+    
+    trial_indices = [start_indices end_indices];
+    
+%     disp(trial_indices);
+    
+    trial_num = 1;
+    for t = 1:length(trial_indices)
+        start_index = trial_indices(t, 1);
+        end_index = trial_indices(t, 2);
+        cur_trial = aux(start_index: end_index);
+        
+        if max(cur_trial) <= 0
+            % aborted
+            if sum(cur_trial == -2) > 0
+                trials(start_index: end_index, :) = -1;
+            % not aborted
+            else
+                trials(start_index: end_index, :) = 0;
+            end
+        else
+            % count the occurrences of each track, pick the track with
+            % greatest number of occurrence and assign that trial with that
+            % number
+            counter = zeros(1,4);
+            for track = 1:4
+                counter(track) = sum(cur_trial == track);
+            end
+            [max_counter, track] = max(counter); 
+            trials(start_index: end_index, 1) = track;
+            trials(start_index: end_index, 2) = trial_num;
+            trial_num = trial_num + 1;
+        end
+    end     
+        
+    % replace track number of non-aborted trials
+    aborted_indices = find(trials(:, 2)==0);
+    aborted_start = aborted_indices(1);
+    aborted_end = aborted_indices(end);
+    
+    rest_of_start_indices = aborted_indices(find(diff(aborted_indices)>1)+1);
+    rest_of_end_indices = aborted_indices(diff(aborted_indices)>1);
+    
+    rest_of_start_indices = rest_of_start_indices(:,1)';
+    rest_of_end_indices = rest_of_end_indices(:,1)';
+    
+    start_indices = [aborted_start rest_of_start_indices];
+    end_indices = [rest_of_end_indices aborted_end];
+    
+    aborted_indices = [start_indices' end_indices'];
+    
+    for i = 1:length(aborted_indices)
+        start_index = aborted_indices(i, 1);
+        end_index = aborted_indices(i, 2);
+        % assign the non-aborted trial with the track number of next trial
+        if end_index < length(trials)
+            trials(start_index:end_index, 1) = trials(end_index + 1, 1);
+            trials(start_index:end_index, 2) = trials(end_index + 1, 2);
+        else
+            trials(start_index:end_index, :) = -1;
+        end
     end
-    if index < length(aux)
-        trials(index:end, :) = -1;
-    end
+        
     
     if visualize
-        % visualize the result     
-        img = imread('Track.png');
-
-        disp(size(avg_pos))
-
-        imshow(img);
-        hold on
-        
-        for i = 1:length(avg_pos)
-            
-            posx = avg_pos(i, 1);
-            posy = avg_pos(i, 2);
-            track_info = trials(i, 1);
-            trial_number = trials(i, 2);
-            if mod(trial_number, 2) == 0
-                color = 'r+';
-                if track_info == -1
-                    color = 'g+';
-                end
-            else
-                color = 'y+';
-                if track_info == -1
-                    color = 'b+';
-                end
-            end    
-            plot(posx, posy, color);
-            pause(0.001);
-        end
+        visualize_track_info(avg_pos, trials);
     end
+    
     if save
         filename_prefix = char(strrep(current_filename,'.mat','_Trials.mat'));
         save(char(strcat("trial_info/",filename_prefix)),'trials');
     end
     f = trials;
 end
-
-

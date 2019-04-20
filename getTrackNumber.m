@@ -16,7 +16,8 @@ cy = 1136; % y-coordinate of center
 r = 416;   % radius of the circle at (cx, cy), used to decide if the animal 
            % returns to one of the arms.
            
-if y >= 1706 % home
+% if y >= 1706 % home
+if y >= 1900
     f = 0; 
     return;
 end
@@ -48,4 +49,5 @@ if y <= cy
     end
 end
 f = -1;
+return
 end
