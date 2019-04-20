@@ -12,6 +12,8 @@ function f = get_track_info(visualize, save)
     posfile = char(strcat("projectedposdata/", posfile));
     assert(contains(posfile, 'Track'));
 
+    disp(posfile);
+    
     load(posfile); 
 
     % n * 2 matrix, col1 is the average of x position, col2 is the average of y
@@ -84,32 +86,33 @@ function f = get_track_info(visualize, save)
         
     % replace track number of non-aborted trials
     aborted_indices = find(trials(:, 2)==0);
-    aborted_start = aborted_indices(1);
-    aborted_end = aborted_indices(end);
-    
-    rest_of_start_indices = aborted_indices(find(diff(aborted_indices)>1)+1);
-    rest_of_end_indices = aborted_indices(diff(aborted_indices)>1);
-    
-    rest_of_start_indices = rest_of_start_indices(:,1)';
-    rest_of_end_indices = rest_of_end_indices(:,1)';
-    
-    start_indices = [aborted_start rest_of_start_indices];
-    end_indices = [rest_of_end_indices aborted_end];
-    
-    aborted_indices = [start_indices' end_indices'];
-    
-    for i = 1:length(aborted_indices)
-        start_index = aborted_indices(i, 1);
-        end_index = aborted_indices(i, 2);
-        % assign the non-aborted trial with the track number of next trial
-        if end_index < length(trials)
-            trials(start_index:end_index, 1) = trials(end_index + 1, 1);
-            trials(start_index:end_index, 2) = trials(end_index + 1, 2);
-        else
-            trials(start_index:end_index, :) = -1;
+    if length(aborted_indices) > 0
+        aborted_start = aborted_indices(1);
+        aborted_end = aborted_indices(end);
+
+        rest_of_start_indices = aborted_indices(find(diff(aborted_indices)>1)+1);
+        rest_of_end_indices = aborted_indices(diff(aborted_indices)>1);
+
+        rest_of_start_indices = rest_of_start_indices(:,1)';
+        rest_of_end_indices = rest_of_end_indices(:,1)';
+
+        start_indices = [aborted_start rest_of_start_indices];
+        end_indices = [rest_of_end_indices aborted_end];
+
+        aborted_indices = [start_indices' end_indices'];
+
+        for i = 1:length(aborted_indices)
+            start_index = aborted_indices(i, 1);
+            end_index = aborted_indices(i, 2);
+            % assign the non-aborted trial with the track number of next trial
+            if end_index < length(trials)
+                trials(start_index:end_index, 1) = trials(end_index + 1, 1);
+                trials(start_index:end_index, 2) = trials(end_index + 1, 2);
+            else
+                trials(start_index:end_index, :) = -1;
+            end
         end
     end
-        
     
     if visualize
         visualize_track_info(avg_pos, trials);
